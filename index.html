@@ -1,50 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Job Matching App</title>
+
+  <!-- Supabase JS v2 -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<h2>Signup</h2>
-<input id="signup-email" placeholder="Email" />
-<input id="signup-password" type="password" placeholder="Password" />
-<button onclick="signup()">Sign Up</button>
+  <h2>Signup</h2>
+  <input id="signup-email" placeholder="Email" />
+  <input id="signup-password" type="password" placeholder="Password" />
+  <button onclick="signup()">Sign Up</button>
 
-<h2>Login</h2>
-<input id="login-email" placeholder="Email" />
-<input id="login-password" type="password" />
-<button onclick="login()">Login</button>
+  <h2>Login</h2>
+  <input id="login-email" placeholder="Email" />
+  <input id="login-password" type="password" />
+  <button onclick="login()">Login</button>
 
-<p id="status"></p>
+  <p id="status"></p>
 
-<script>
-  const supabaseUrl = "https://rjzuucdlybhmsntaasht.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqenV1Y2RseWJobXNudGFhc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM5ODYsImV4cCI6MjA4MjY1OTk4Nn0.AbaHJ2Cw6Hew0VpC4KRwMP-HQRYIc28fO6tSQkjy85c";
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  <script>
+    const SUPABASE_URL = "https://rjzuucdlybhmsntaasht.supabase.co";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqenV1Y2RseWJobXNudGFhc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM5ODYsImV4cCI6MjA4MjY1OTk4Nn0.AbaHJ2Cw6Hew0VpC4KRwMP-HQRYIc28fO6tSQkjy85c";
 
-  async function signup() {
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
+    // IMPORTANT: do NOT name this variable "supabase"
+    const sb = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
-    const { error } = await supabase.auth.signUp({ email, password });
-    document.getElementById('status').innerText =
-      error ? error.message : "Signup successful. Check email.";
-  }
+    async function signup() {
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
 
-  async function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+      });
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email, password
-    });
+      console.log("SIGNUP:", data, error);
 
-    document.getElementById('status').innerText =
-      error ? error.message : "Login successful. User ID: " + data.user.id;
-  }
-</script>
+      document.getElementById("status").innerText =
+        error ? error.message : "Signup successful. Check your email.";
+    }
+
+    async function login() {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      const { data, error } = await sb.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log("LOGIN:", data, error);
+
+      document.getElementById("status").innerText =
+        error ? error.message : "Login successful. User ID: " + data.user.id;
+    }
+  </script>
 
 </body>
 </html>
-
