@@ -56,13 +56,6 @@
 
     p {
       text-align: center;
-      font-size: 14px;
-    }
-
-    .muted {
-      font-size: 12px;
-      color: #666;
-      text-align: center;
     }
 
     hr {
@@ -85,7 +78,7 @@
 
     <h2>Login</h2>
     <input id="login-email" placeholder="Email" />
-    <input id="login-password" type="password" />
+    <input id="login-password" type="password" placeholder="Password" />
     <button onclick="login()">Login</button>
 
     <p id="status"></p>
@@ -93,8 +86,8 @@
 
   <!-- DASHBOARD -->
   <div id="dashboard" style="display:none;">
-    <h2>Dashboard</h2>
-    <p id="user-id" class="muted"></p>
+    <h3>Dashboard</h3>
+    <p id="user-id" style="font-size:12px;color:#666;"></p>
 
     <hr />
 
@@ -102,8 +95,14 @@
     <input id="full_name" placeholder="Full Name" />
     <textarea id="bio" placeholder="Bio"></textarea>
     <button onclick="saveProfile()">Save Profile</button>
-
     <p id="profile-status"></p>
+
+    <hr />
+
+    <h3>Upload Resume (PDF)</h3>
+    <input type="file" id="resume-file" accept="application/pdf" />
+    <button onclick="uploadResume()">Upload Resume</button>
+    <p id="resume-status"></p>
 
     <hr />
 
@@ -113,21 +112,13 @@
 </div>
 
 <script>
-  /* ===============================
-     SUPABASE SETUP
-  =============================== */
   const SUPABASE_URL = "https://rjzuucdlybhmsntaasht.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqenV1Y2RseWJobXNudGFhc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM5ODYsImV4cCI6MjA4MjY1OTk4Nn0.AbaHJ2Cw6Hew0VpC4KRwMP-HQRYIc28fO6tSQkjy85c";
 
-  const sb = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  /* ===============================
-     AUTH FUNCTIONS
-  =============================== */
+  // ---------- AUTH ----------
   async function signup() {
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
@@ -142,32 +133,45 @@
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
 
-    const { error } = await sb.auth.signInWithPassword({
+    const { data, error } = await sb.auth.signInWithPassword({
       email,
       password,
     });
 
-    document.getElementById("status").innerText =
-      error ? error.message : "Login successful";
+    if (error) {
+      document.getElementById("status").innerText = error.message;
+      return;
+    }
+
+    showDashboard(data.user);
   }
 
   async function logout() {
     await sb.auth.signOut();
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("auth-section").style.display = "block";
   }
 
-  /* ===============================
-     PROFILE SAVE
-  =============================== */
+  // ---------- SESSION CHECK ----------
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) {
+      showDashboard(session.user);
+    }
+  });
+
+  function showDashboard(user) {
+    document.getElementById("auth-section").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("user-id").innerText = "User ID: " + user.id;
+  }
+
+  // ---------- PROFILE ----------
   async function saveProfile() {
     const {
       data: { user },
     } = await sb.auth.getUser();
 
-    if (!user) {
-      document.getElementById("profile-status").innerText =
-        "Please login first";
-      return;
-    }
+    if (!user) return;
 
     const full_name = document.getElementById("full_name").value;
     const bio = document.getElementById("bio").value;
@@ -182,30 +186,41 @@
       error ? error.message : "Profile saved successfully";
   }
 
-  /* ===============================
-     AUTH STATE HANDLING
-  =============================== */
-  async function checkAuth() {
+  // ---------- RESUME UPLOAD ----------
+  async function uploadResume() {
+    const file = document.getElementById("resume-file").files[0];
+    if (!file) {
+      document.getElementById("resume-status").innerText =
+        "Please select a PDF file";
+      return;
+    }
+
     const {
       data: { user },
     } = await sb.auth.getUser();
 
-    if (user) {
-      document.getElementById("auth-section").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("user-id").innerText =
-        "User ID: " + user.id;
-    } else {
-      document.getElementById("auth-section").style.display = "block";
-      document.getElementById("dashboard").style.display = "none";
+    if (!user) return;
+
+    const filePath = `${user.id}/resume.pdf`;
+
+    const { error: uploadError } = await sb.storage
+      .from("resumes")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      document.getElementById("resume-status").innerText =
+        uploadError.message;
+      return;
     }
+
+    const { error: dbError } = await sb.from("resume").upsert({
+      user_id: user.id,
+      file_path: filePath,
+    });
+
+    document.getElementById("resume-status").innerText =
+      dbError ? dbError.message : "Resume uploaded successfully";
   }
-
-  sb.auth.onAuthStateChange(() => {
-    checkAuth();
-  });
-
-  checkAuth();
 </script>
 
 </body>
