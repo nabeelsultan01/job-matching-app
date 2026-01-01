@@ -9,6 +9,8 @@
 </head>
 <body>
 
+<!-- AUTH SECTION -->
+<div id="auth-section">
   <h2>Signup</h2>
   <input id="signup-email" placeholder="Email" />
   <input id="signup-password" type="password" placeholder="Password" />
@@ -20,34 +22,74 @@
   <button onclick="login()">Login</button>
 
   <p id="status"></p>
-
+</div>
 
 <hr />
 
-<h2>Profile</h2>
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+  <h2>Dashboard</h2>
+  <p id="user-id"></p>
 
-<input id="full_name" placeholder="Full Name" />
-<br /><br />
+  <h3>Profile</h3>
+  <input id="full_name" placeholder="Full Name" />
+  <br /><br />
+  <textarea id="bio" placeholder="Bio"></textarea>
+  <br /><br />
+  <button onclick="saveProfile()">Save Profile</button>
 
-<textarea id="bio" placeholder="Bio"></textarea>
-<br /><br />
+  <p id="profile-status"></p>
 
-<button onclick="saveProfile()">Save Profile</button>
+  <br />
+  <button onclick="logout()">Logout</button>
+</div>
 
-<p id="profile-status"></p>
+<script>
+  /* ===============================
+     SUPABASE SETUP
+  =============================== */
+  const SUPABASE_URL = "https://rjzuucdlybhmsntaasht.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqenV1Y2RseWJobXNudGFhc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM5ODYsImV4cCI6MjA4MjY1OTk4Nn0.AbaHJ2Cw6Hew0VpC4KRwMP-HQRYIc28fO6tSQkjy85c";
 
-  
-  <script>
-    const SUPABASE_URL = "https://rjzuucdlybhmsntaasht.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqenV1Y2RseWJobXNudGFhc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM5ODYsImV4cCI6MjA4MjY1OTk4Nn0.AbaHJ2Cw6Hew0VpC4KRwMP-HQRYIc28fO6tSQkjy85c";
+  const sb = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
-    // IMPORTANT: do NOT name this variable "supabase"
-    const sb = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
+  /* ===============================
+     AUTH FUNCTIONS
+  =============================== */
+  async function signup() {
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
 
-      <script>
+    const { error } = await sb.auth.signUp({ email, password });
+
+    document.getElementById("status").innerText =
+      error ? error.message : "Signup successful. Check your email.";
+  }
+
+  async function login() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    const { data, error } = await sb.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    document.getElementById("status").innerText =
+      error ? error.message : "Login successful";
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+  }
+
+  /* ===============================
+     PROFILE SAVE
+  =============================== */
   async function saveProfile() {
     const {
       data: { user },
@@ -62,51 +104,41 @@
     const full_name = document.getElementById("full_name").value;
     const bio = document.getElementById("bio").value;
 
-    const { error } = await sb
-      .from("profile")
-      .upsert({
-        user_id: user.id,
-        full_name: full_name,
-        bio: bio,
-      });
+    const { error } = await sb.from("profile").upsert({
+      user_id: user.id,
+      full_name,
+      bio,
+    });
 
     document.getElementById("profile-status").innerText =
       error ? error.message : "Profile saved successfully";
   }
+
+  /* ===============================
+     AUTH STATE HANDLING
+  =============================== */
+  async function checkAuth() {
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+
+    if (user) {
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("user-id").innerText =
+        "User ID: " + user.id;
+    } else {
+      document.getElementById("auth-section").style.display = "block";
+      document.getElementById("dashboard").style.display = "none";
+    }
+  }
+
+  sb.auth.onAuthStateChange(() => {
+    checkAuth();
+  });
+
+  checkAuth();
 </script>
-
-    );
-
-    async function signup() {
-      const email = document.getElementById("signup-email").value;
-      const password = document.getElementById("signup-password").value;
-
-      const { data, error } = await sb.auth.signUp({
-        email,
-        password,
-      });
-
-      console.log("SIGNUP:", data, error);
-
-      document.getElementById("status").innerText =
-        error ? error.message : "Signup successful. Check your email.";
-    }
-
-    async function login() {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-
-      const { data, error } = await sb.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log("LOGIN:", data, error);
-
-      document.getElementById("status").innerText =
-        error ? error.message : "Login successful. User ID: " + data.user.id;
-    }
-  </script>
 
 </body>
 </html>
