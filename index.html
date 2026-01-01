@@ -213,7 +213,7 @@
       return;
     }
 
-    const { error: dbError } = await sb.from("resume").upsert({
+    const { error: dbError } = await sb.from("resumes").upsert({
       user_id: user.id,
       file_path: filePath,
     });
