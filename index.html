@@ -6,42 +6,110 @@
 
   <!-- Supabase JS v2 -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 60px auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    p {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .muted {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+
+    hr {
+      margin: 24px 0;
+    }
+  </style>
 </head>
 <body>
 
-<!-- AUTH SECTION -->
-<div id="auth-section">
-  <h2>Signup</h2>
-  <input id="signup-email" placeholder="Email" />
-  <input id="signup-password" type="password" placeholder="Password" />
-  <button onclick="signup()">Sign Up</button>
+<div class="container">
 
-  <h2>Login</h2>
-  <input id="login-email" placeholder="Email" />
-  <input id="login-password" type="password" />
-  <button onclick="login()">Login</button>
+  <!-- AUTH SECTION -->
+  <div id="auth-section">
+    <h2>Signup</h2>
+    <input id="signup-email" placeholder="Email" />
+    <input id="signup-password" type="password" placeholder="Password" />
+    <button onclick="signup()">Sign Up</button>
 
-  <p id="status"></p>
-</div>
+    <hr />
 
-<hr />
+    <h2>Login</h2>
+    <input id="login-email" placeholder="Email" />
+    <input id="login-password" type="password" />
+    <button onclick="login()">Login</button>
 
-<!-- DASHBOARD -->
-<div id="dashboard" style="display:none;">
-  <h2>Dashboard</h2>
-  <p id="user-id"></p>
+    <p id="status"></p>
+  </div>
 
-  <h3>Profile</h3>
-  <input id="full_name" placeholder="Full Name" />
-  <br /><br />
-  <textarea id="bio" placeholder="Bio"></textarea>
-  <br /><br />
-  <button onclick="saveProfile()">Save Profile</button>
+  <!-- DASHBOARD -->
+  <div id="dashboard" style="display:none;">
+    <h2>Dashboard</h2>
+    <p id="user-id" class="muted"></p>
 
-  <p id="profile-status"></p>
+    <hr />
 
-  <br />
-  <button onclick="logout()">Logout</button>
+    <h3>Profile</h3>
+    <input id="full_name" placeholder="Full Name" />
+    <textarea id="bio" placeholder="Bio"></textarea>
+    <button onclick="saveProfile()">Save Profile</button>
+
+    <p id="profile-status"></p>
+
+    <hr />
+
+    <button onclick="logout()">Logout</button>
+  </div>
+
 </div>
 
 <script>
@@ -74,7 +142,7 @@
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
 
-    const { data, error } = await sb.auth.signInWithPassword({
+    const { error } = await sb.auth.signInWithPassword({
       email,
       password,
     });
