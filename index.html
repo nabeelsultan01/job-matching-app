@@ -21,6 +21,22 @@
 
   <p id="status"></p>
 
+
+<hr />
+
+<h2>Profile</h2>
+
+<input id="full_name" placeholder="Full Name" />
+<br /><br />
+
+<textarea id="bio" placeholder="Bio"></textarea>
+<br /><br />
+
+<button onclick="saveProfile()">Save Profile</button>
+
+<p id="profile-status"></p>
+
+  
   <script>
     const SUPABASE_URL = "https://rjzuucdlybhmsntaasht.supabase.co";
     const SUPABASE_ANON_KEY =
@@ -30,6 +46,35 @@
     const sb = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY
+
+      <script>
+  async function saveProfile() {
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+
+    if (!user) {
+      document.getElementById("profile-status").innerText =
+        "Please login first";
+      return;
+    }
+
+    const full_name = document.getElementById("full_name").value;
+    const bio = document.getElementById("bio").value;
+
+    const { error } = await sb
+      .from("profile")
+      .upsert({
+        user_id: user.id,
+        full_name: full_name,
+        bio: bio,
+      });
+
+    document.getElementById("profile-status").innerText =
+      error ? error.message : "Profile saved successfully";
+  }
+</script>
+
     );
 
     async function signup() {
